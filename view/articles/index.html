@@ -1,0 +1,209 @@
+{extend name="layout" /}
+
+{block name="title"}Artikel | ThinkPHP Learning Kit{/block}
+
+{block name="content"}
+<section>
+    <header class="actions" style="justify-content: space-between; align-items: center;">
+        <div>
+            <p class="pill">Artikel</p>
+            <h2>Daftar artikel</h2>
+            <p class="muted">Contoh CRUD dengan filter, pagination, dan badge status</p>
+        </div>
+        <div class="actions">
+            <a role="button" data-open-modal="create" href="/articles?modal=create">+ Artikel baru</a>
+            <a role="button" class="outline secondary" href="/articles">Reset</a>
+        </div>
+    </header>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <p class="muted">Total</p>
+            <h2>{$stats.total}</h2>
+        </div>
+        <div class="stat-card">
+            <p class="muted">Published</p>
+            <h2>{$stats.published}</h2>
+            <div class="progress">
+                <div class="progress-bar" data-progress="{$publishedRatio}"></div>
+            </div>
+            <small class="muted">{$publishedRatio}% dari total</small>
+        </div>
+        <div class="stat-card">
+            <p class="muted">Draft</p>
+            <h2>{$stats.draft}</h2>
+        </div>
+    </div>
+
+    <div class="filter-panel" id="articles">
+        <form method="get" class="grid filter-grid">
+            <label>
+                Kata kunci
+                <input type="text" name="q" placeholder="Cari judul atau konten" value="{$search|default=''}">
+            </label>
+            <label class="field-narrow">
+                Status
+                <select name="status">
+                    <option value="">Semua</option>
+                    {foreach $statuses as $key => $label}
+                    <option value="{$key}" {if isset($status) && $status === $key}selected{/if}>{$label}</option>
+                    {/foreach}
+                </select>
+            </label>
+            <label class="field-narrow field-tight">
+                Item
+                <select name="per_page">
+                    <option value="8" {eq name="perPage" value="8"}selected{/eq}>8</option>
+                    <option value="12" {eq name="perPage" value="12"}selected{/eq}>12</option>
+                    <option value="16" {eq name="perPage" value="16"}selected{/eq}>16</option>
+                </select>
+            </label>
+            <label class="field-narrow">
+                Urutkan
+                <select name="sort">
+                    <option value="recent" {if $sort==='recent'}selected{/if}>Terbaru</option>
+                    <option value="published" {if $sort==='published'}selected{/if}>Tanggal publish</option>
+                    <option value="title" {if $sort==='title'}selected{/if}>Judul A-Z</option>
+                </select>
+            </label>
+            <div class="filter-actions">
+                <button type="submit">Terapkan filter</button>
+                <a role="button" class="secondary outline" href="/articles">Reset</a>
+            </div>
+        </form>
+        <div class="quick-filters">
+            <span>Filter cepat:</span>
+            <a class="pill-btn {if $status==='published'}active{/if}" href="/articles?status=published#articles" data-remember-scroll="true">Published</a>
+            <a class="pill-btn {if $status==='draft'}active{/if}" href="/articles?status=draft#articles" data-remember-scroll="true">Draft</a>
+            <a class="pill-btn {if $status==''}active{/if}" href="/articles#articles" data-remember-scroll="true">Semua</a>
+        </div>
+    </div>
+
+    <div class="card-grid">
+        {volist name="articles" id="article"}
+        <article class="card">
+            <div class="card-head">
+                <span class="badge {if $article.status == 'published'}success{else/}warning{/if}">
+                    {$article.status_label|default=$article.status}
+                </span>
+                <small class="muted">
+                    {if !empty($article.published_at)}
+                        Terbit {:date('d M Y H:i', strtotime((string) $article.published_at))}
+                    {else/}
+                        Draft
+                    {/if}
+                </small>
+            </div>
+            <h3>{$article.title}</h3>
+            <p class="muted">
+                {if $article.summary}
+                    {$article.summary}
+                {else/}
+                    {:htmlentities(mb_substr(strip_tags((string) $article->content), 0, 140))}...
+                {/if}
+            </p>
+            <p class="muted">Dibuat {:date('d M Y H:i', strtotime((string) $article.created_at))}</p>
+            <div class="card-actions">
+                <a role="button" class="secondary btn-sm" href="/articles/{$article.id}">Detail</a>
+                <a role="button" class="secondary outline btn-sm" href="/articles/{$article.id}/edit">Edit</a>
+                <form method="post" action="/articles/{$article.id}" data-confirm="Hapus artikel ini?" data-confirm-ok="Hapus">
+                    <input type="hidden" name="_method" value="DELETE">
+                    <button type="submit" class="contrast btn-sm">Hapus</button>
+                </form>
+            </div>
+        </article>
+        {/volist}
+        <article class="card-cta">
+            <a role="button" class="btn-sm" href="#insight">Lihat insight terbaru ↓</a>
+        </article>
+    </div>
+
+    <a class="fab" data-open-modal="create" href="/articles?modal=create">+ Artikel</a>
+
+    <div class="modal-backdrop" data-modal="create" {if $openModal}data-auto-open="true"{/if}>
+        <div class="modal-card">
+            <header class="modal-head">
+                <button class="outline modal-close" data-close-modal>&times;</button>
+            </header>
+            <form method="post" action="/articles" class="grid modal-grid">
+                <label class="span-2">
+                    Judul
+                    <input type="text" name="title" value="{$old.title|default=''}" required>
+                    {if isset($errors['title'])}<small class="text-error">{$errors.title}</small>{/if}
+                </label>
+
+                <label class="field-narrow">
+                    Status
+                    <select name="status" required>
+                        {foreach $statuses as $key => $label}
+                        <option value="{$key}" {if isset($old.status) && $old.status === $key}selected{/if}>{$label}</option>
+                        {/foreach}
+                    </select>
+                    {if isset($errors['status'])}<small class="text-error">{$errors.status}</small>{/if}
+                </label>
+
+                <label class="field-narrow">
+                    Waktu terbit (opsional)
+                    <input type="datetime-local" name="published_at" value="{if isset($old.published_at)}{$old.published_at}{/if}">
+                    {if isset($errors['published_at'])}<small class="text-error">{$errors.published_at}</small>{/if}
+                </label>
+
+                <label class="span-2">
+                    Ringkasan
+                    <textarea name="summary" rows="2" placeholder="Ringkasan singkat">{$old.summary|default=''}</textarea>
+                    {if isset($errors['summary'])}<small class="text-error">{$errors.summary}</small>{/if}
+                </label>
+
+                <label class="span-2">
+                    Konten
+                    <textarea name="content" rows="6" placeholder="Konten utama" required>{$old.content|default=''}</textarea>
+                    {if isset($errors['content'])}<small class="text-error">{$errors.content}</small>{/if}
+                </label>
+
+                <div class="actions wrap span-2">
+                    <button type="submit">Simpan</button>
+                    <button class="secondary" data-close-modal>Batalkan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {if $articles->isEmpty()}
+    <p class="muted">Belum ada artikel. Mulai dengan tombol "Artikel baru".</p>
+    {/if}
+
+    <div class="pagination">
+        {$articles->render()|raw}
+    </div>
+
+    <div class="timeline" id="insight">
+        <div class="timeline-head">
+            <div>
+                <p class="pill">Insight</p>
+                <h3>Publish terbaru</h3>
+                <p class="muted">5 artikel publish terakhir</p>
+            </div>
+        </div>
+        <ul class="timeline-list">
+            {volist name="latestPublished" id="pub"}
+            <li>
+                <div class="dot"></div>
+                <div class="timeline-content">
+                    <p class="muted">{:date('d M Y H:i', strtotime((string) $pub.published_at))}</p>
+                    <strong>{$pub.title}</strong>
+                    <p class="muted">{$pub.summary|default=htmlentities(mb_substr(strip_tags((string)$pub->content),0,80))}...</p>
+                </div>
+            </li>
+            {/volist}
+            {if $latestPublished->isEmpty()}
+            <li>
+                <div class="dot"></div>
+                <div class="timeline-content">
+                    <p class="muted">Belum ada artikel publish.</p>
+                </div>
+            </li>
+            {/if}
+        </ul>
+    </div>
+</section>
+{/block}

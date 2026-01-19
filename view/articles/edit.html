@@ -1,0 +1,48 @@
+{extend name="layout" /}
+
+{block name="title"}Edit Artikel | ThinkPHP Learning Kit{/block}
+
+{block name="content"}
+<section>
+    <p class="pill">Artikel</p>
+    <h2>Edit artikel</h2>
+    <p class="muted">Ubah data artikel kemudian simpan untuk memperbarui</p>
+
+    <form method="post" action="/articles/{$article.id}" class="grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+        <input type="hidden" name="_method" value="PUT">
+        <label>
+            Judul
+            <input type="text" name="title" value="{$article.title}" required>
+        </label>
+
+        <label class="field-narrow">
+            Status
+            <select name="status" required>
+                {foreach $statuses as $key => $label}
+                <option value="{$key}" {if $article.status === $key}selected{/if}>{$label}</option>
+                {/foreach}
+            </select>
+        </label>
+
+        <label>
+            Waktu terbit (opsional)
+            <input type="datetime-local" name="published_at" value="{if !empty($article.published_at)}{:date('Y-m-d\\TH:i', strtotime((string) $article.published_at))}{/if}">
+        </label>
+
+        <label style="grid-column: 1 / -1;">
+            Ringkasan
+            <textarea name="summary" rows="2">{$article.summary|default=''}</textarea>
+        </label>
+
+        <label style="grid-column: 1 / -1;">
+            Konten
+            <textarea name="content" rows="8" required>{$article.content}</textarea>
+        </label>
+
+        <div class="actions" style="grid-column: 1 / -1;">
+            <button type="submit">Simpan perubahan</button>
+            <a role="button" class="secondary" href="/articles/{$article.id}">Batal</a>
+        </div>
+    </form>
+</section>
+{/block}

@@ -1,0 +1,76 @@
+{extend name="layout" /}
+
+{block name="title"}Beranda | ThinkPHP Learning Kit{/block}
+
+{block name="content"}
+<section class="hero">
+    <div>
+        <p class="pill">ThinkPHP 8 + MySQL</p>
+        <h1>Starter kit untuk belajar ThinkPHP</h1>
+        <p class="muted">Contoh CRUD artikel lengkap dengan model, validasi, view, routing RESTful.</p>
+        <div class="actions">
+            <a role="button" href="/articles/create">Buat artikel pertama</a>
+            <a role="button" class="secondary" href="/articles">Lihat daftar artikel</a>
+        </div>
+    </div>
+    <div class="hero-panel">
+        <h4>Cara</h4>
+        <ol>
+            <li>Salin konfigurasi env
+                <pre><code>cp .example.env .env</code></pre>
+            </li>
+            <li>Update kredensial MySQL di <code>.env</code> dan jalankan SQL di <code>database/schema.sql</code></li>
+            <li>Jalankan server dev
+                <pre><code>php think run</code></pre>
+            </li>
+            <li>Buka <code>http://localhost:8000</code> dan coba menu Artikel</li>
+        </ol>
+    </div>
+</section>
+
+<section class="checklist">
+    <div class="checklist-head">
+        <div>
+            <p class="pill">Belajar terarah</p>
+            <h3>Checklist belajar ThinkPHP</h3>
+            <p class="muted">Ikuti urutan ini supaya konsep-konsep inti terasa utuh.</p>
+        </div>
+        <div class="checklist-side">
+            <div class="carousel-actions" aria-label="Navigasi checklist">
+                <button type="button" class="secondary outline btn-icon" data-carousel-prev="checklist" aria-label="Geser kiri">‹</button>
+                <button type="button" class="secondary outline btn-icon" data-carousel-next="checklist" aria-label="Geser kanan">›</button>
+            </div>
+        </div>
+    </div>
+    <div class="checklist-carousel">
+        <div class="checklist-grid" data-carousel="checklist" aria-label="Checklist belajar ThinkPHP" tabindex="0">
+        <article class="checklist-card">
+            <p class="checklist-kicker">Routing</p>
+            <h4>Resource dan endpoint</h4>
+            <p class="muted"><code>route/app.php</code> untuk resource <em>articles</em> dan rute utama.</p>
+        </article>
+        <article class="checklist-card">
+            <p class="checklist-kicker">Controller</p>
+            <h4>CRUD + validasi</h4>
+            <p class="muted"><code>app/controller/Article.php</code> memuat alur CRUD, filter, dan flash message.</p>
+        </article>
+        <article class="checklist-card">
+            <p class="checklist-kicker">Model & ORM</p>
+            <h4>Schema, scope, timestamp</h4>
+            <p class="muted"><code>app/model/Article.php</code> mengatur schema, scope, dan timestamp otomatis.</p>
+        </article>
+        <article class="checklist-card">
+            <p class="checklist-kicker">Validasi</p>
+            <h4>Rule yang tegas</h4>
+            <p class="muted"><code>app/validate/ArticleValidate.php</code> menjaga input bersih dan konsisten.</p>
+        </article>
+        <article class="checklist-card">
+            <p class="checklist-kicker">View</p>
+            <h4>Template dan layout</h4>
+            <p class="muted"><code>view/articles</code> menampilkan form, daftar, dan detail dengan layout.</p>
+        </article>
+        </div>
+    </div>
+</section>
+
+{/block}

@@ -1,0 +1,50 @@
+{extend name="layout" /}
+
+{block name="title"}Detail Artikel | ThinkPHP Learning Kit{/block}
+
+{block name="content"}
+<section class="card">
+    <div class="actions" style="justify-content: space-between; align-items: center;">
+        <p class="pill">Artikel #{$article.id}</p>
+        <span class="badge {if $article.status == 'published'}success{else/}warning{/if}">{$article.status_label}</span>
+    </div>
+
+    <h2>{$article.title}</h2>
+    <p class="muted">Terakhir diperbarui {:date('d M Y H:i', strtotime((string) $article.updated_at))}</p>
+
+    <table class="table-like">
+        <tr>
+            <th>Ringkasan</th>
+            <td>{$article.summary|default='(belum ada ringkasan)'}</td>
+        </tr>
+        <tr>
+            <th>Waktu terbit</th>
+            <td>
+                {if !empty($article.published_at)}
+                    {:date('d M Y H:i', strtotime((string) $article.published_at))}
+                {else/}
+                    Draft - Belum dijadwalkan
+                {/if}
+            </td>
+        </tr>
+        <tr>
+            <th>Dibuat</th>
+            <td>{:date('d M Y H:i', strtotime((string) $article.created_at))}</td>
+        </tr>
+    </table>
+
+    <article style="margin-top: 1.5rem;">
+        <h4>Konten</h4>
+        <p>{:nl2br(htmlentities((string) $article->content))}</p>
+    </article>
+
+    <div class="card-actions">
+        <a role="button" class="secondary btn-sm" href="/articles">Kembali</a>
+        <a role="button" class="secondary outline btn-sm" href="/articles/{$article.id}/edit">Edit</a>
+        <form method="post" action="/articles/{$article.id}" data-confirm="Yakin menghapus artikel ini?" data-confirm-ok="Hapus">
+            <input type="hidden" name="_method" value="DELETE">
+            <button type="submit" class="contrast btn-sm">Hapus</button>
+        </form>
+    </div>
+</section>
+{/block}

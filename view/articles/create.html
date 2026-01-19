@@ -1,0 +1,47 @@
+{extend name="layout" /}
+
+{block name="title"}Buat Artikel | ThinkPHP Learning Kit{/block}
+
+{block name="content"}
+<section>
+    <p class="pill">Artikel</p>
+    <h2>Buat artikel baru</h2>
+    <p class="muted">Contoh form dengan validasi server-side via <code>Article Validate</code>.</p>
+
+    <form method="post" action="/articles" class="grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+        <label>
+            Judul
+            <input type="text" name="title" placeholder="Judul menarik" required>
+        </label>
+
+        <label>
+            Status
+            <select name="status" required>
+                {foreach $statuses as $key => $label}
+                <option value="{$key}">{$label}</option>
+                {/foreach}
+            </select>
+        </label>
+
+        <label>
+            Waktu terbit (opsional, otomatis saat publish)
+            <input type="datetime-local" name="published_at">
+        </label>
+
+        <label style="grid-column: 1 / -1;">
+            Ringkasan (maks 255 karakter)
+            <textarea name="summary" rows="2" placeholder="Ringkasan singkat untuk daftar"></textarea>
+        </label>
+
+        <label style="grid-column: 1 / -1;">
+            Konten
+            <textarea name="content" rows="8" placeholder="Tulis konten utama di sini" required></textarea>
+        </label>
+
+        <div class="actions" style="grid-column: 1 / -1;">
+            <button type="submit">Simpan</button>
+            <a role="button" class="secondary" href="/articles">Batal</a>
+        </div>
+    </form>
+</section>
+{/block}

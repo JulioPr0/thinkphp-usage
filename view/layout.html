@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{block name="title"}ThinkPHP Learning Kit{/block}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/app.css">
+    <script defer src="/static/js/app.js"></script>
+</head>
+<body>
+<header class="container topbar">
+    <nav>
+        <ul>
+            <li><a href="https://websitejulio.com"><strong>ThinkPHP Learning Kit</strong></a></li>
+        </ul>
+        <ul>
+            <li><a href="/">Beranda</a></li>
+            <li><a href="/articles">Artikel</a></li>
+            <li><a class="secondary" href="/articles/create">Buat Artikel</a></li>
+        </ul>
+    </nav>
+</header>
+
+<main class="container content">
+    {if isset($flash) && !empty($flash.message)}
+    <div class="alert {$flash.type|default='info'}">
+        {$flash.message}
+    </div>
+    {/if}
+
+    {block name="content"}{/block}
+</main>
+
+<div class="confirm-backdrop" id="confirm-dialog" aria-hidden="true">
+    <div class="confirm-card" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+        <h3 id="confirm-title">Konfirmasi</h3>
+        <p id="confirm-message" class="muted">Apakah kamu yakin?</p>
+        <div class="confirm-actions">
+            <button type="button" class="secondary" data-confirm-cancel>Batalkan</button>
+            <button type="button" class="contrast" data-confirm-ok>Hapus</button>
+        </div>
+    </div>
+</div>
+
+<footer class="container footer">
+    <small>ThinkPHP {:\\think\\facade\\App::version()} • PHP {:PHP_VERSION}</small>
+</footer>
+</body>
+</html>
