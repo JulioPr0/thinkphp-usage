@@ -1,0 +1,5 @@
+{extend name="layout" /}
+{block name="title"}{$article.title} | ThinkPress{/block}
+{block name="content"}
+<div class="reading-width"><a class="back-link" href="/blog">← Semua tulisan</a><article class="public-article"><p class="eyebrow">{$article.category_name|default='JURNAL'}</p><h1>{$article.title}</h1><p class="lead muted">{$article.summary}</p><div class="article-meta"><time>{:display_date($article['published_at'])}</time><span>{$readingMinutes} menit baca</span></div><hr><div class="prose">{$article.content}</div></article></div>
+{/block}

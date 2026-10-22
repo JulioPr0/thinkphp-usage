@@ -37,47 +37,81 @@ Program sponsor: https://www.thinkphp.cn/sponsor memberi eksposur tinggi di situ
 
 [![](https://www.thinkphp.cn/sponsor.svg)](https://www.thinkphp.cn/sponsor)
 
-## Instalasi
+## Mulai cepat — SQLite
 
-```
-composer create-project topthink/think tp
-```
+Jalankan dari folder proyek:
 
-Jalankan server
-
-```
-cd tp
-php think run
-```
-
-Lalu buka di browser
-
-```
-http://localhost:8000
+```bash
+composer install
+cp .env.example .env
+php think app:install --seed
+php think admin:create admin@example.com "Administrator"
+php think run --host 127.0.0.1 --port 8000
 ```
 
-Jika perlu update framework
+Pada Windows, salin `.env.example` menjadi `.env` melalui File Explorer atau `Copy-Item .env.example .env` di PowerShell.
 
+Perintah pembuatan admin meminta password tersembunyi dan konfirmasinya. Gunakan 12–72 byte. **Tidak ada akun atau password bawaan.**
+
+- Blog: <http://localhost:8000/blog>
+- Login: <http://localhost:8000/login>
+- Dashboard setelah login: <http://localhost:8000/dashboard>
+
+`--seed` menambahkan artikel contoh hanya ketika tabel artikel masih kosong. Hilangkan opsi tersebut untuk instalasi kosong. Menjalankan `app:install` kembali hanya menjalankan migrasi yang belum tercatat.
+
+## Menggunakan MySQL
+
+Buat database UTF-8 terlebih dahulu dan akun aplikasi tersendiri. Atur `.env`:
+
+```ini
+DB_DRIVER = mysql
+DB_HOST = 127.0.0.1
+DB_PORT = 3306
+DB_NAME = articles_db
+DB_USER = articles_app
+DB_PASS = "password-database-anda"
 ```
-composer update topthink/framework
+
+Lalu jalankan `php think app:install`. Akun yang menjalankan migrasi memerlukan izin membuat/mengubah tabel serta indeks; akun runtime dapat dibatasi setelahnya.
+
+## Upgrade database dari versi awal
+
+1. Backup database dan salin `.env` lama ke luar folder proyek.
+2. Ekstrak kode baru. Pertahankan kredensial dan isi `.env` menggunakan nama `DB_DRIVER`, `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS`, `DB_PORT` seperti contoh di atas. Untuk database MySQL lama, isi `DB_DRIVER = mysql` secara eksplisit karena default baru adalah SQLite.
+3. Jalankan `composer install`, kemudian `php think app:install` tanpa `--seed`.
+4. Migrasi menambahkan tabel admin/kategori/pembatasan login dan kolom `slug`, `category_id`, `deleted_at`, `version`. Data judul, ringkasan, konten, ID, dan timestamp lama dipertahankan. Slug artikel lama mendapat akhiran ID agar unik.
+5. Artikel published lama tanpa waktu terbit memakai tanggal pembuatannya. Status MySQL diperluas dari enum awal menjadi varchar untuk mendukung arsip.
+6. Buat admin melalui CLI. Periksa jumlah artikel dan hasil render sebelum menggunakan database tersebut untuk produksi.
+
+MySQL melakukan commit otomatis untuk perubahan skema. Gunakan jendela pemeliharaan dan backup; migrasi ini tidak menyediakan rollback otomatis. Jangan menjalankan beberapa proses migrasi secara bersamaan.
+
+`database/legacy_schema.sql` hanya menyimpan skema awal untuk referensi. Instalasi baru dan upgrade memakai migrasi, bukan mengimpor file tersebut.
+
+## Penggunaan
+
+- **Draft**: privat; waktu terbit dikosongkan saat disimpan.
+- **Published**: publik jika waktu terbit sudah tiba. Waktu kosong memakai waktu sekarang.
+- **Terjadwal**: label untuk Published dengan waktu terbit di masa depan. Visibilitas dihitung saat halaman diminta.
+- **Arsip**: privat; histori tanggal terbit dapat dipertahankan.
+- **Sampah**: tidak terlihat publik dan tidak bisa diedit. Pulihkan dahulu; hasil pemulihan selalu Draft.
+- **Aksi massal Terbitkan sekarang** mengubah tanggal terbit menjadi waktu saat aksi diproses.
+- **Slug kosong saat edit** mempertahankan slug lama. Perubahan slug manual mengganti URL publik; redirect dari slug sebelumnya belum tersedia.
+- **CSV** berisi ID, judul, slug, ringkasan, status, kategori, serta timestamp. Konten penuh tidak disertakan agar ukuran ekspor terkendali. Nilai yang berpotensi menjadi formula diberi awalan apostrof.
+- Konten disimpan sebagai **teks biasa**, bukan HTML atau Markdown. Ini berlaku juga pada pratinjau.
+- Tekan `/` pada daftar/blog untuk memfokuskan pencarian. Tema tampilan tersimpan di browser.
+
+## Akun dan sesi
+
+Semua akun yang dibuat melalui CLI memiliki akses admin yang sama. Belum ada editor dengan izin terbatas, registrasi publik, reset password melalui email, maupun manajemen pengguna di UI.
+
+```bash
+php think admin:create admin@example.com "Administrator" --reset
 ```
 
-## Aturan penamaan
+Reset CLI dan ganti password di halaman Akun mengakhiri seluruh sesi akun tersebut. Sesi memiliki batas tidak aktif 2 jam dan batas total 8 jam. Login dibatasi 5 percobaan per pasangan email/IP dan 30 percobaan per IP dalam jendela 15 menit. Pembatasan tersimpan di database sehingga membuat sesi browser baru tidak meresetnya. IP menggunakan alamat koneksi langsung; jika memakai reverse proxy, pertimbangkan kebijakan rate limit di proxy karena beberapa pengguna dapat berbagi IP proxy yang sama.
 
-ThinkPHP mengikuti PSR-2 dan PSR-4 untuk penamaan/autoload.
+Untuk otomasi CLI, password dapat diberikan melalui environment `ADMIN_PASSWORD` dari secret manager. Hindari argumen password pada command line dan jangan menyimpannya di repository.
 
-## Kontribusi
+## Lisensi
 
-Langsung kirim PR atau Issue.
-
-## Informasi hak cipta
-
-ThinkPHP dirilis di bawah lisensi Apache2 dan gratis digunakan.
-
-Lisensi/kredit pihak ketiga dicantumkan terpisah.
-
-Hak cipta © 2006–2025 oleh ThinkPHP (http://thinkphp.cn). Semua hak dilindungi.
-
-ThinkPHP® adalah merek dagang milik Shanghai TopThink Information Technology Co., Ltd.
-
-Detail lengkap: [LICENSE.txt](LICENSE.txt)
+Basis ThinkPHP tetap mengikuti lisensi [Apache-2.0](LICENSE.txt). Kredit framework asli dipertahankan pada metadata Composer.

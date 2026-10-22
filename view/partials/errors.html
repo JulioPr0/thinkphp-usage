@@ -1,0 +1,3 @@
+{if !empty($errors)}
+<div class="alert error" role="alert" tabindex="-1" data-errors><strong>Periksa kembali formulir</strong><ul>{foreach $errors as $error}<li>{$error}</li>{/foreach}</ul></div>
+{/if}

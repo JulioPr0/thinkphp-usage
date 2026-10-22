@@ -1,0 +1,14 @@
+<?php
+declare(strict_types=1);
+
+namespace app\support;
+
+final class Csv
+{
+    public static function cell(mixed $value): string
+    {
+        $value = (string) ($value ?? '');
+        return preg_match('/^[\s\x00-\x1f]*[=+\-@\t\r\n]/u', $value) === 1
+            ? "'" . $value : $value;
+    }
+}

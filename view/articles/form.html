@@ -1,0 +1,18 @@
+{extend name="layout" /}
+{block name="title"}{$heading} | ThinkPress{/block}
+{block name="content"}
+<div class="page-head"><div><a class="back-link" href="/articles">← Daftar artikel</a><h1>{$heading}</h1><p class="muted">Tuliskan ide Anda. Simpan sebagai draft atau tentukan waktu terbitnya.</p></div><button class="button secondary" type="button" data-preview>Pratinjau tulisan</button></div>
+{include file="partials/errors" /}
+<form method="post" action="{$action}" class="editor-grid" data-editor data-unsaved>
+<input type="hidden" name="_token" value="{$csrf}"><input type="hidden" name="version" value="{$article.version}">
+<section class="panel editor-main"><label for="article-title">Judul artikel <span class="required">*</span></label><input class="title-input" id="article-title" name="title" type="text" value="{$article.title}" maxlength="150" required data-counter="title-count" aria-describedby="title-count"><small class="muted count" id="title-count">Maksimal 150 karakter</small>
+<label for="article-summary">Ringkasan</label><textarea id="article-summary" name="summary" rows="3" maxlength="255" placeholder="Gambaran singkat artikel Anda…">{$article.summary}</textarea>
+<label for="article-content">Konten <span class="required">*</span></label><textarea id="article-content" name="content" rows="18" minlength="10" required data-counter="content-count" aria-describedby="content-count content-help">{$article.content}</textarea><div class="editor-meta"><small class="muted" id="content-help">Teks biasa · minimal 10 karakter · maksimal 60 KB</small><small class="muted" id="content-count"></small></div></section>
+<aside class="panel editor-side"><p class="eyebrow">PENGATURAN ARTIKEL</p><label for="article-status">Status</label><select id="article-status" name="status">{foreach $statuses as $key => $label}<option value="{$key}" {if $article['status'] === $key}selected{/if}>{$label}</option>{/foreach}</select>
+<label for="article-category">Kategori</label><select id="article-category" name="category_id"><option value="">Tanpa kategori</option>{foreach $categories as $category}<option value="{$category.id}" {if $article['category_id'] == $category['id']}selected{/if}>{$category.name}</option>{/foreach}</select>
+<label for="article-slug">Slug URL</label><input id="article-slug" name="slug" value="{$article.slug}" maxlength="160" pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="otomatis-dari-judul"><small class="muted">Kosongkan untuk membuat slug otomatis. Saat edit, slug lama dipertahankan.</small>
+<label for="article-date">Waktu terbit</label><input id="article-date" type="datetime-local" name="published_at" value="{$article.published_at}"><small class="muted">Zona waktu: {:app_escape(date_default_timezone_get())}. Pilih Published dan tanggal mendatang untuk menjadwalkan. Kosong = terbit sekarang. Draft menghapus waktu terbit.</small>
+<div class="stack-actions"><button type="submit">Simpan artikel</button><a class="button secondary" href="/articles">Kembali</a></div>{if isset($errors['version']) && $id}<a class="button secondary" href="/articles/{$id}/edit">Muat versi terbaru</a>{/if}</aside>
+</form>
+<dialog id="preview-dialog" aria-labelledby="preview-title"><div class="dialog-head"><p class="eyebrow">PRATINJAU</p><button type="button" class="secondary small" data-close-preview>Tutup</button></div><h1 id="preview-title"></h1><p class="lead" id="preview-summary"></p><article class="prose" id="preview-content"></article></dialog>
+{/block}

@@ -1,58 +1,34 @@
 <?php
+declare(strict_types=1);
+
 namespace app;
 
-use think\db\exception\DataNotFoundException;
-use think\db\exception\ModelNotFoundException;
+use app\exception\ConflictException;
 use think\exception\Handle;
 use think\exception\HttpException;
 use think\exception\HttpResponseException;
-use think\exception\ValidateException;
 use think\Response;
 use Throwable;
 
-/**
- * 应用异常处理类
- */
 class ExceptionHandle extends Handle
 {
-    /**
-     * 不需要记录信息（日志）的异常类列表
-     * @var array
-     */
-    protected $ignoreReport = [
-        HttpException::class,
-        HttpResponseException::class,
-        ModelNotFoundException::class,
-        DataNotFoundException::class,
-        ValidateException::class,
-    ];
+    protected $ignoreReport = [HttpException::class, HttpResponseException::class];
 
-    /**
-     * 记录异常信息（包括日志或者其它方式记录）
-     *
-     * @access public
-     * @param  Throwable $exception
-     * @return void
-     */
-    public function report(Throwable $exception): void
+    public function render($request, Throwable $exception): Response
     {
-        // 使用内置的方式记录异常日志
-        parent::report($exception);
-    }
-
-    /**
-     * Render an exception into an HTTP response.
-     *
-     * @access public
-     * @param \think\Request   $request
-     * @param Throwable $e
-     * @return Response
-     */
-    public function render($request, Throwable $e): Response
-    {
-        // 添加自定义异常处理机制
-
-        // 其他错误交给系统处理
-        return parent::render($request, $e);
+        if ($exception instanceof HttpResponseException) {
+            return $exception->getResponse();
+        }
+        if (env('APP_DEBUG', false) && !$exception instanceof HttpException) {
+            return parent::render($request, $exception);
+        }
+        $status = $exception instanceof HttpException ? $exception->getStatusCode() : ($exception instanceof ConflictException ? 409 : 500);
+        $message = $exception instanceof HttpException || $exception instanceof ConflictException ? $exception->getMessage() : 'Terjadi kesalahan. Silakan coba kembali.';
+        $html = '<!doctype html><html lang="id"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+            . '<title>' . $status . ' | ThinkPress</title><link rel="stylesheet" href="/static/css/app.css">'
+            . '<main class="container error-page"><p class="eyebrow">THINKPRESS</p><h1>' . $status . '</h1><p>'
+            . htmlspecialchars($message, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+            . '</p><a class="button" href="/">Kembali ke beranda</a></main></html>';
+        return response($html, $status)->header(['Cache-Control' => 'no-store', 'X-Content-Type-Options' => 'nosniff']);
     }
 }

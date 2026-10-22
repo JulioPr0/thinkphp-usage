@@ -1,0 +1,9 @@
+{extend name="layout" /}
+{block name="title"}Jurnal | ThinkPress{/block}
+{block name="content"}
+<section class="journal-hero"><p class="eyebrow">CATATAN & PERSPEKTIF</p><h1>Tempat ide<br>menemukan bentuk.</h1><p class="lead muted">Tulisan, panduan, dan hal menarik untuk dipelajari hari ini.</p></section>
+<form method="get" action="/blog" class="public-filter"><label class="sr-only" for="blog-search">Cari artikel</label><input id="blog-search" type="search" name="q" value="{$filters.q}" maxlength="150" placeholder="Cari sesuatu yang menarik…" data-search><label class="sr-only" for="blog-category">Kategori</label><select id="blog-category" name="category_id"><option value="0">Semua kategori</option>{foreach $categories as $category}<option value="{$category.id}" {if $filters['category_id'] == $category['id']}selected{/if}>{$category.name}</option>{/foreach}</select><button type="submit">Cari artikel</button><a href="/blog">Reset</a></form>
+<div class="card-grid">{foreach $listing.rows as $article}<article class="article-card"><p class="eyebrow">{$article.category_name|default='JURNAL'}</p><h2><a href="/read/{$article.slug}">{$article.title}</a></h2><p class="muted">{$article.summary|default='Baca tulisan selengkapnya.'}</p><div class="card-bottom"><small>{:display_date($article['published_at'])}</small><a href="/read/{$article.slug}" aria-label="Baca {$article.title}">Baca →</a></div></article>{/foreach}</div>
+{if empty($listing['rows'])}<div class="empty-state panel"><h2>Belum ada tulisan di sini.</h2><p class="muted">Coba kata kunci lain atau kembali lagi nanti.</p></div>{/if}
+{include file="partials/pagination" /}
+{/block}

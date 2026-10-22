@@ -4,207 +4,149 @@ declare(strict_types=1);
 namespace app\controller;
 
 use app\BaseController;
-use app\model\Article as ArticleModel;
-use app\validate\ArticleValidate;
-use think\facade\Session;
-use think\facade\View;
-use think\exception\ValidateException;
+use app\exception\ConflictException;
+use app\exception\ValidationException;
+use app\service\ArticleService;
+use app\support\ArticleFilters;
+use app\support\Csv;
+use think\Response;
+use think\facade\Db;
 
-class Article extends BaseController
+final class Article extends BaseController
 {
-    public function index()
+    public function index(): Response
     {
-        $search  = $this->request->get('q');
-        $status  = $this->request->get('status');
-        $perPage = (int) $this->request->get('per_page', 8);
-        $sort    = $this->request->get('sort', 'recent');
-
-        $query = ArticleModel::order('created_at', 'desc');
-
-        if (!empty($status)) {
-            $query->where('status', $status);
-        }
-
-        if (!empty($search)) {
-            $query->whereLike('title|summary|content', "%{$search}%");
-        }
-
-        $query = match ($sort) {
-            'title'     => $query->order('title', 'asc'),
-            'published' => $query->orderRaw('published_at IS NULL')->order('published_at', 'desc'),
-            default     => $query->order('created_at', 'desc'),
-        };
-
-        $articles = $query->paginate([
-            'list_rows' => $perPage > 0 ? $perPage : 8,
-            'query'     => $this->request->get(),
-        ]);
-
-        $flash = [
-            'message' => Session::pull('flash.message'),
-            'type'    => Session::pull('flash.type', 'info'),
-        ];
-
-        $errors = Session::pull('errors', []);
-        $old    = Session::pull('old', []);
-        $openModal = $this->request->get('modal') === 'create' || !empty($errors);
-        $stats = [
-            'total'     => ArticleModel::count(),
-            'published' => ArticleModel::where('status', 'published')->count(),
-            'draft'     => ArticleModel::where('status', 'draft')->count(),
-        ];
-        $latestPublished = ArticleModel::published()->order('published_at', 'desc')->limit(5)->select();
-
-        $publishedRatio = $stats['total'] > 0 ? round(($stats['published'] / $stats['total']) * 100, 1) : 0;
-
-        return View::fetch('articles/index', [
-            'articles'  => $articles,
-            'search'    => $search,
-            'status'    => $status,
-            'statuses'  => ArticleModel::STATUSES,
-            'flash'     => $flash,
-            'perPage'   => $perPage,
-            'errors'    => $errors,
-            'old'       => $old,
-            'openModal' => $openModal,
-            'sort'      => $sort,
-            'stats'     => $stats,
-            'latestPublished' => $latestPublished,
-            'publishedRatio'  => $publishedRatio,
+        $filters = ArticleFilters::fromArray($this->request->get());
+        return $this->render('articles/index', [
+            'filters' => $filters, 'listing' => (new ArticleService())->listing($filters),
+            'categories' => Db::name('categories')->order('name')->select()->toArray(),
+            'statuses' => ArticleFilters::STATUSES, 'sorts' => ArticleFilters::SORTS,
+            'stats' => (new ArticleService())->statistics(),
+            'exportUrl' => ArticleFilters::url($filters, [], '/articles/export'),
         ]);
     }
 
-    public function create()
+    public function create(): Response
     {
-        Session::flash('flash.message', 'Gunakan form modal di halaman daftar untuk membuat artikel');
-        Session::flash('flash.type', 'info');
-        return redirect((string) url('/articles', ['modal' => 'create']));
+        return $this->form();
     }
 
-    public function save()
+    public function save(): Response
     {
+        return $this->persist();
+    }
+
+    public function edit(int $id): Response
+    {
+        return $this->form((new ArticleService())->find($id));
+    }
+
+    public function update(int $id): Response
+    {
+        (new ArticleService())->find($id);
+        return $this->persist($id);
+    }
+
+    private function persist(?int $id = null): Response
+    {
+        $input = $this->request->post();
         try {
-            $data = $this->validatedPayload();
-        } catch (ValidateException $e) {
-            Session::flash('flash.message', 'Periksa kembali form!');
-            Session::flash('flash.type', 'error');
-            return redirect((string) url('/articles', ['modal' => 'create']));
+            $savedId = (new ArticleService())->save($input, $id);
+        } catch (ValidationException $exception) {
+            return $this->form($input, $id, $exception->errors(), 422);
+        } catch (ConflictException $exception) {
+            return $this->form($input, $id, ['version' => $exception->getMessage()], 409);
         }
-
-        ArticleModel::create($data);
-
-        Session::flash('flash.message', 'Artikel baru berhasil dibuat');
-        Session::flash('flash.type', 'success');
-
-        return redirect((string) url('/articles'));
+        $this->flash($id ? 'Perubahan artikel berhasil disimpan.' : 'Artikel baru berhasil dibuat.');
+        return redirect('/articles/' . $savedId);
     }
 
-    public function read(int $id)
+    private function form(array $data = [], ?int $id = null, array $errors = [], int $status = 200): Response
     {
-        $article = ArticleModel::find($id);
-        if (!$article) {
-            abort(404, 'Artikel tidak ditemukan');
-        }
-
-        return View::fetch('articles/show', [
-            'article'  => $article,
-            'statuses' => ArticleModel::STATUSES,
-            'flash'    => [
-                'message' => Session::pull('flash.message'),
-                'type'    => Session::pull('flash.type', 'info'),
-            ],
-        ]);
-    }
-
-    public function edit(int $id)
-    {
-        $article = ArticleModel::find($id);
-        if (!$article) {
-            abort(404, 'Artikel tidak ditemukan');
-        }
-
-        return View::fetch('articles/edit', [
-            'article'  => $article,
-            'statuses' => ArticleModel::STATUSES,
-            'errors'   => Session::pull('errors', []),
-            'old'      => Session::pull('old', []),
-        ]);
-    }
-
-    public function update(int $id)
-    {
-        $article = ArticleModel::find($id);
-        if (!$article) {
-            abort(404, 'Artikel tidak ditemukan');
-        }
-
-        try {
-            $data = $this->validatedPayload();
-        } catch (ValidateException $e) {
-            Session::flash('flash.message', 'Periksa kembali form!');
-            Session::flash('flash.type', 'error');
-            return redirect((string) url('/articles/' . $id . '/edit'));
-        }
-        $article->save($data);
-
-        Session::flash('flash.message', 'Artikel diperbarui');
-        Session::flash('flash.type', 'success');
-
-        return redirect((string) url('/articles/' . $id));
-    }
-
-    public function delete(int $id)
-    {
-        $article = ArticleModel::find($id);
-        if (!$article) {
-            abort(404, 'Artikel tidak ditemukan');
-        }
-
-        $article->delete();
-
-        Session::flash('flash.message', 'Artikel dihapus');
-        Session::flash('flash.type', 'success');
-
-        return redirect((string) url('/articles'));
-    }
-
-    protected function validatedPayload(): array
-    {
-        $data = $this->request->only([
-            'title',
-            'summary',
-            'content',
-            'status',
-            'published_at',
-        ], 'post');
-
-        foreach ($data as $key => $value) {
-            if (is_string($value)) {
-                $data[$key] = trim($value);
+        $id ??= isset($data['id']) ? (int) $data['id'] : null;
+        $defaults = ['title' => '', 'slug' => '', 'summary' => '', 'content' => '', 'status' => 'draft', 'category_id' => '', 'published_at' => '', 'version' => '1'];
+        foreach ($defaults as $key => $value) {
+            if (isset($data[$key]) && is_scalar($data[$key])) {
+                $defaults[$key] = (string) $data[$key];
             }
         }
-
-        $data['status'] = $data['status'] ?? 'draft';
-
-        if ($data['status'] === 'published' && empty($data['published_at'])) {
-            $data['published_at'] = date('Y-m-d H:i:s');
+        if ($defaults['published_at'] !== '' && preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/D', $defaults['published_at'])) {
+            $defaults['published_at'] = substr(str_replace(' ', 'T', $defaults['published_at']), 0, 16);
         }
+        return $this->render('articles/form', [
+            'article' => $defaults, 'id' => $id,
+            'heading' => $id ? 'Edit artikel' : 'Artikel baru',
+            'action' => $id ? '/articles/' . $id . '/update' : '/articles',
+            'categories' => Db::name('categories')->order('name')->select()->toArray(),
+            'statuses' => ArticleFilters::STATUSES, 'errors' => $errors,
+        ], $status);
+    }
 
-        if (!empty($data['published_at'])) {
-            $timestamp = strtotime($data['published_at']);
-            $data['published_at'] = $timestamp ? date('Y-m-d H:i:s', $timestamp) : null;
-        } else {
-            $data['published_at'] = null;
-        }
+    public function read(int $id): Response
+    {
+        $article = (new ArticleService())->find($id);
+        $article['category_name'] = $article['category_id'] ? Db::name('categories')->where('id', $article['category_id'])->value('name') : null;
+        return $this->render('articles/show', [
+            'article' => $article,
+            'isPublic' => $article['status'] === 'published' && $article['published_at'] <= date('Y-m-d H:i:s'),
+        ]);
+    }
 
+    public function trash(int $id): Response
+    {
+        (new ArticleService())->bulk([$id], 'trash');
+        $this->flash('Artikel dipindahkan ke sampah dan dapat dipulihkan.');
+        return redirect('/articles');
+    }
+
+    public function restore(int $id): Response
+    {
+        (new ArticleService())->bulk([$id], 'restore');
+        $this->flash('Artikel dipulihkan sebagai draft.');
+        return redirect('/articles?view=trash');
+    }
+
+    public function duplicate(int $id): Response
+    {
+        $newId = (new ArticleService())->duplicate($id);
+        $this->flash('Salinan draft berhasil dibuat.');
+        return redirect('/articles/' . $newId . '/edit');
+    }
+
+    public function bulk(): Response
+    {
+        $ids = $this->request->post('ids', []);
         try {
-            $this->validate($data, ArticleValidate::class);
-        } catch (ValidateException $e) {
-            Session::flash('errors', $e->getError());
-            Session::flash('old', $data);
-            throw $e;
+            $count = (new ArticleService())->bulk(is_array($ids) ? $ids : [], $this->scalarPost('action'));
+            $this->flash($count . ' artikel berhasil diproses.');
+        } catch (ValidationException $exception) {
+            $this->flash(implode(' ', $exception->errors()), 'error');
+        } catch (ConflictException $exception) {
+            $this->flash($exception->getMessage(), 'error');
         }
+        return redirect($this->scalarPost('return_view') === 'trash' ? '/articles?view=trash' : '/articles');
+    }
 
-        return $data;
+    public function export(): Response
+    {
+        $filters = ArticleFilters::fromArray($this->request->get());
+        $query = (new ArticleService())->query($filters);
+        if ((clone $query)->count('a.id') > 5000) {
+            abort(422, 'Ekspor dibatasi 5.000 artikel. Persempit filter pencarian.');
+        }
+        $rows = $query->field('a.id,a.title,a.slug,a.summary,a.status,c.name AS category,a.published_at,a.created_at,a.updated_at')->limit(5000)->select()->toArray();
+        $stream = fopen('php://temp', 'w+');
+        fwrite($stream, "\xEF\xBB\xBF");
+        fputcsv($stream, ['ID', 'Judul', 'Slug', 'Ringkasan', 'Status', 'Kategori', 'Waktu terbit', 'Dibuat', 'Diperbarui'], ',', '"', '');
+        foreach ($rows as $row) {
+            fputcsv($stream, array_map([Csv::class, 'cell'], array_values($row)), ',', '"', '');
+        }
+        rewind($stream);
+        $csv = stream_get_contents($stream);
+        fclose($stream);
+        return response($csv)->header([
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="articles-' . date('Y-m-d') . '.csv"',
+        ]);
     }
 }

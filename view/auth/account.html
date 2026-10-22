@@ -1,0 +1,7 @@
+{extend name="layout" /}
+{block name="title"}Pengaturan akun | ThinkPress{/block}
+{block name="content"}
+<div class="page-head"><div><p class="eyebrow">PENGATURAN</p><h1>Akun Anda.</h1><p class="muted">{$user.name} · {$user.email}</p></div></div>
+<section class="panel account-panel"><h2>Ganti password</h2><p class="muted">Setelah disimpan, semua sesi akan berakhir dan Anda perlu masuk kembali.</p>{include file="partials/errors" /}
+<form method="post" action="/account/password" class="stack-form"><input type="hidden" name="_token" value="{$csrf}"><label for="current-password">Password saat ini</label><input id="current-password" type="password" name="current_password" autocomplete="current-password" required><label for="new-password">Password baru</label><input id="new-password" type="password" name="password" minlength="12" maxlength="72" autocomplete="new-password" required><small class="muted">Gunakan 12–72 byte. Frasa panjang lebih mudah diingat.</small><label for="password-confirmation">Konfirmasi password baru</label><input id="password-confirmation" type="password" name="password_confirmation" minlength="12" maxlength="72" autocomplete="new-password" required><button type="submit">Simpan password</button></form></section>
+{/block}

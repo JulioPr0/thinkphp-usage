@@ -1,50 +1,6 @@
 {extend name="layout" /}
-
-{block name="title"}Detail Artikel | ThinkPHP Learning Kit{/block}
-
+{block name="title"}{$article.title} | ThinkPress{/block}
 {block name="content"}
-<section class="card">
-    <div class="actions" style="justify-content: space-between; align-items: center;">
-        <p class="pill">Artikel #{$article.id}</p>
-        <span class="badge {if $article.status == 'published'}success{else/}warning{/if}">{$article.status_label}</span>
-    </div>
-
-    <h2>{$article.title}</h2>
-    <p class="muted">Terakhir diperbarui {:date('d M Y H:i', strtotime((string) $article.updated_at))}</p>
-
-    <table class="table-like">
-        <tr>
-            <th>Ringkasan</th>
-            <td>{$article.summary|default='(belum ada ringkasan)'}</td>
-        </tr>
-        <tr>
-            <th>Waktu terbit</th>
-            <td>
-                {if !empty($article.published_at)}
-                    {:date('d M Y H:i', strtotime((string) $article.published_at))}
-                {else/}
-                    Draft - Belum dijadwalkan
-                {/if}
-            </td>
-        </tr>
-        <tr>
-            <th>Dibuat</th>
-            <td>{:date('d M Y H:i', strtotime((string) $article.created_at))}</td>
-        </tr>
-    </table>
-
-    <article style="margin-top: 1.5rem;">
-        <h4>Konten</h4>
-        <p>{:nl2br(htmlentities((string) $article->content))}</p>
-    </article>
-
-    <div class="card-actions">
-        <a role="button" class="secondary btn-sm" href="/articles">Kembali</a>
-        <a role="button" class="secondary outline btn-sm" href="/articles/{$article.id}/edit">Edit</a>
-        <form method="post" action="/articles/{$article.id}" data-confirm="Yakin menghapus artikel ini?" data-confirm-ok="Hapus">
-            <input type="hidden" name="_method" value="DELETE">
-            <button type="submit" class="contrast btn-sm">Hapus</button>
-        </form>
-    </div>
-</section>
+<div class="page-head"><a class="back-link" href="/articles">← Daftar artikel</a><div class="actions"><a class="button secondary" href="/articles/{$article.id}/edit">Edit artikel</a><form method="post" action="/articles/{$article.id}/duplicate"><input type="hidden" name="_token" value="{$csrf}"><button type="submit" class="secondary">Buat salinan</button></form></div></div>
+<article class="panel article-detail"><div class="article-kicker"><span class="badge {$article.status}">{:article_label($article)}</span><span>{$article.category_name|default='Tanpa kategori'}</span></div><h1>{$article.title}</h1><p class="lead">{$article.summary}</p><div class="article-meta"><span>Terbit: {:display_date($article['published_at'])}</span><span>Diperbarui: {:display_date($article['updated_at'])}</span><span>Versi {$article.version}</span></div><hr><div class="prose">{$article.content}</div><hr><p class="muted">URL publik: /read/{$article.slug}</p>{if $isPublic}<a class="button secondary" href="/read/{$article.slug}">Buka artikel publik →</a>{else/}<p class="muted">Artikel ini belum tersedia di blog publik.</p>{/if}</article>
 {/block}

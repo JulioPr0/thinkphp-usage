@@ -1,76 +1,13 @@
 {extend name="layout" /}
-
-{block name="title"}Beranda | ThinkPHP Learning Kit{/block}
-
+{block name="title"}Dashboard | ThinkPress{/block}
 {block name="content"}
-<section class="hero">
-    <div>
-        <p class="pill">ThinkPHP 8 + MySQL</p>
-        <h1>Starter kit untuk belajar ThinkPHP</h1>
-        <p class="muted">Contoh CRUD artikel lengkap dengan model, validasi, view, routing RESTful.</p>
-        <div class="actions">
-            <a role="button" href="/articles/create">Buat artikel pertama</a>
-            <a role="button" class="secondary" href="/articles">Lihat daftar artikel</a>
-        </div>
-    </div>
-    <div class="hero-panel">
-        <h4>Cara</h4>
-        <ol>
-            <li>Salin konfigurasi env
-                <pre><code>cp .example.env .env</code></pre>
-            </li>
-            <li>Update kredensial MySQL di <code>.env</code> dan jalankan SQL di <code>database/schema.sql</code></li>
-            <li>Jalankan server dev
-                <pre><code>php think run</code></pre>
-            </li>
-            <li>Buka <code>http://localhost:8000</code> dan coba menu Artikel</li>
-        </ol>
-    </div>
+<section class="hero dashboard-hero"><div><p class="eyebrow">RUANG REDAKSI</p><h1>Ide yang baik<br>layak dibagikan.</h1><p>Selamat datang, {$user.name}. Kelola tulisan dan jadwal terbit Anda dari satu tempat.</p><a class="button light" href="/articles/create">+ Tulis artikel</a></div><div class="hero-number"><span>{$stats.total}</span><p>artikel dalam koleksi</p><small>{$categoryCount} kategori</small></div></section>
+<section class="stats-grid" aria-label="Statistik artikel">
+    <a class="stat-card" href="/articles"><span>Total aktif</span><strong>{$stats.total}</strong></a><a class="stat-card" href="/articles?status=published"><span>Sudah terbit</span><strong>{$stats.published}</strong></a><div class="stat-card"><span>Terjadwal</span><strong>{$stats.scheduled}</strong></div><a class="stat-card" href="/articles?status=draft"><span>Draft</span><strong>{$stats.draft}</strong></a><a class="stat-card" href="/articles?status=archived"><span>Arsip</span><strong>{$stats.archived}</strong></a><a class="stat-card" href="/articles?view=trash"><span>Sampah</span><strong>{$stats.trash}</strong></a>
 </section>
-
-<section class="checklist">
-    <div class="checklist-head">
-        <div>
-            <p class="pill">Belajar terarah</p>
-            <h3>Checklist belajar ThinkPHP</h3>
-            <p class="muted">Ikuti urutan ini supaya konsep-konsep inti terasa utuh.</p>
-        </div>
-        <div class="checklist-side">
-            <div class="carousel-actions" aria-label="Navigasi checklist">
-                <button type="button" class="secondary outline btn-icon" data-carousel-prev="checklist" aria-label="Geser kiri">‹</button>
-                <button type="button" class="secondary outline btn-icon" data-carousel-next="checklist" aria-label="Geser kanan">›</button>
-            </div>
-        </div>
-    </div>
-    <div class="checklist-carousel">
-        <div class="checklist-grid" data-carousel="checklist" aria-label="Checklist belajar ThinkPHP" tabindex="0">
-        <article class="checklist-card">
-            <p class="checklist-kicker">Routing</p>
-            <h4>Resource dan endpoint</h4>
-            <p class="muted"><code>route/app.php</code> untuk resource <em>articles</em> dan rute utama.</p>
-        </article>
-        <article class="checklist-card">
-            <p class="checklist-kicker">Controller</p>
-            <h4>CRUD + validasi</h4>
-            <p class="muted"><code>app/controller/Article.php</code> memuat alur CRUD, filter, dan flash message.</p>
-        </article>
-        <article class="checklist-card">
-            <p class="checklist-kicker">Model & ORM</p>
-            <h4>Schema, scope, timestamp</h4>
-            <p class="muted"><code>app/model/Article.php</code> mengatur schema, scope, dan timestamp otomatis.</p>
-        </article>
-        <article class="checklist-card">
-            <p class="checklist-kicker">Validasi</p>
-            <h4>Rule yang tegas</h4>
-            <p class="muted"><code>app/validate/ArticleValidate.php</code> menjaga input bersih dan konsisten.</p>
-        </article>
-        <article class="checklist-card">
-            <p class="checklist-kicker">View</p>
-            <h4>Template dan layout</h4>
-            <p class="muted"><code>view/articles</code> menampilkan form, daftar, dan detail dengan layout.</p>
-        </article>
-        </div>
-    </div>
-</section>
-
+<section class="panel"><div class="section-head"><div><p class="eyebrow">AKTIVITAS</p><h2>Artikel terbaru</h2></div><a href="/articles">Lihat semua →</a></div>
+<div class="table-scroll"><table><thead><tr><th>Artikel</th><th>Kategori</th><th>Status</th><th>Dibuat</th><th>Aksi</th></tr></thead><tbody>
+{foreach $recent as $article}<tr><td><a class="title-link" href="/articles/{$article.id}">{$article.title}</a><small class="muted block">/{$article.slug}</small></td><td>{$article.category_name|default='Tanpa kategori'}</td><td><span class="badge {$article.status}">{:article_label($article)}</span></td><td>{:display_date($article['created_at'])}</td><td><a href="/articles/{$article.id}/edit">Edit →</a></td></tr>{/foreach}
+</tbody></table></div>
+{if empty($recent)}<div class="empty-state"><h3>Mulai tulisan pertama Anda.</h3><p>Simpan ide sebagai draft, lalu terbitkan saat siap.</p><a class="button" href="/articles/create">Buat artikel</a></div>{/if}</section>
 {/block}

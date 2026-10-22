@@ -1,0 +1,6 @@
+{extend name="layout" /}
+{block name="title"}Masuk admin | ThinkPress{/block}
+{block name="content"}
+<section class="auth-card panel"><p class="eyebrow">RUANG REDAKSI</p><h1>Selamat datang.</h1><p class="muted">Masuk untuk melanjutkan tulisan Anda.</p>{include file="partials/errors" /}
+<form method="post" action="/login" class="stack-form"><input type="hidden" name="_token" value="{$csrf}"><label for="login-email">Email</label><input id="login-email" type="email" name="email" value="{$email|default=''}" maxlength="190" autocomplete="username" required><label for="login-password">Password</label><input id="login-password" type="password" name="password" maxlength="72" autocomplete="current-password" required><button type="submit">Masuk ke dashboard →</button></form><a class="muted back-link" href="/blog">← Kembali ke jurnal</a></section>
+{/block}

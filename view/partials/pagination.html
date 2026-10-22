@@ -1,0 +1,4 @@
+<div class="pagination" aria-label="Navigasi halaman"><p class="muted">{$listing.total} artikel · Halaman {$listing.page} dari {$listing.pages}</p><div class="actions">
+    {if $listing['page'] > 1}<a class="button secondary small" rel="prev" href="{:app_escape(\app\support\ArticleFilters::url($filters, ['page' => $listing['page'] - 1], $pagePath))}">← Sebelumnya</a>{/if}
+    {if $listing['page'] < $listing['pages']}<a class="button secondary small" rel="next" href="{:app_escape(\app\support\ArticleFilters::url($filters, ['page' => $listing['page'] + 1], $pagePath))}">Berikutnya →</a>{/if}
+</div></div>

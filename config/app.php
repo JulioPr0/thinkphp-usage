@@ -11,7 +11,7 @@ return [
     // 默认应用
     'default_app'      => 'index',
     // 默认时区
-    'default_timezone' => 'Asia/Shanghai',
+    'default_timezone' => env('APP_TIMEZONE', 'Asia/Jakarta'),
 
     // 应用映射（自动多应用模式有效）
     'app_map'          => [],
@@ -24,7 +24,7 @@ return [
     'exception_tmpl'   => app()->getThinkPath() . 'tpl/think_exception.tpl',
 
     // 错误显示信息,非调试模式有效
-    'error_message'    => '页面错误！请稍后再试～',
+    'error_message'    => 'Terjadi kesalahan. Silakan coba kembali.',
     // 显示错误信息
     'show_error_msg'   => false,
 ];

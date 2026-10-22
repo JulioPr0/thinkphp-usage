@@ -1,6 +1,6 @@
 {
     "name": "topthink/think",
-    "description": "the new thinkphp framework",
+    "description": "ThinkPress: a maintainable ThinkPHP article management application",
     "type": "project",
     "keywords": [
         "framework",
@@ -20,10 +20,13 @@
         }
     ],
     "require": {
-        "php": ">=8.0.0",
+        "php": "^8.2",
+        "ext-iconv": "*",
+        "ext-mbstring": "*",
+        "ext-pdo": "*",
         "topthink/framework": "^8.0",
-        "topthink/think-orm": "^3.0|^4.0",
         "topthink/think-filesystem": "^2.0|^3.0",
+        "topthink/think-orm": "^4.0",
         "topthink/think-view": "^2.0"
     },
     "require-dev": {
@@ -33,18 +36,18 @@
     "autoload": {
         "psr-4": {
             "app\\": "app"
-        },
-        "psr-0": {
-            "": "extend/"
         }
     },
     "config": {
-        "preferred-install": "dist"
+        "preferred-install": "dist",
+        "sort-packages": true
     },
     "scripts": {
         "post-autoload-dump": [
             "@php think service:discover",
             "@php think vendor:publish"
-        ]
+        ],
+        "test": "@php tests/run.php",
+        "check": "@php tests/lint.php"
     }
 }

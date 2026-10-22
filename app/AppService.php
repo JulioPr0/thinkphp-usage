@@ -1,22 +1,21 @@
 <?php
-declare (strict_types = 1);
+declare(strict_types=1);
 
 namespace app;
 
+use PDO;
 use think\Service;
+use think\facade\Db;
 
-/**
- * 应用服务类
- */
 class AppService extends Service
 {
-    public function register()
+    public function boot(): void
     {
-        // 服务注册
-    }
-
-    public function boot()
-    {
-        // 服务启动
+        Db::event('after_connect', static function (PDO $pdo): void {
+            if ($pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite') {
+                $pdo->exec('PRAGMA foreign_keys = ON');
+                $pdo->exec('PRAGMA busy_timeout = 10000');
+            }
+        });
     }
 }
